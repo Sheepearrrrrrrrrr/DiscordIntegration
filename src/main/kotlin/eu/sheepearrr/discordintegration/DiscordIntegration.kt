@@ -95,12 +95,15 @@ class DiscordIntegration : ModInitializer {
         }
         ServerLifecycleEvents.SERVER_STARTED.register {
             COROUTINE_SCOPE = CoroutineScope(SupervisorJob() + it.asCoroutineDispatcher())
-
-//            BOT.gateway?.getChannelById(Snowflake.of(BOT.yapChannel))?.block()?.restChannel?.createMessage(":white_check_mark: The server has started :white_check_mark:")?.block()
+            COROUTINE_SCOPE.launch {
+                BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
+                    content = ":fooftrue: The server has started :fooftrue:"
+                }
+            }
         }
         ServerPlayerEvents.JOIN.register {
             val embed = EmbedBuilder()
-            embed.title = "Joined the game."
+            embed.title = "Joined the game"
             embed.color = Color(0x55FF55)
             embed.author {
                 name = it.name.string
@@ -115,7 +118,7 @@ class DiscordIntegration : ModInitializer {
         }
         ServerPlayerEvents.LEAVE.register {
             val embed = EmbedBuilder()
-            embed.title = "Left the game."
+            embed.title = "Left the game"
             embed.color = Color(0xFF5555)
             embed.author {
                 name = it.name.string
@@ -156,7 +159,7 @@ class DiscordIntegration : ModInitializer {
         }
         BOT = Kord(CONFIG.token.get().trim())
         BOT!!.on<MessageCreateEvent> {
-            if (message.channelId.value.toLong() != CONFIG.yapChannel.get() && message.author?.isSelf == false)
+            if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true)
                 return@on
             MESSAGE_QUEUE.add(message.data)
         }
