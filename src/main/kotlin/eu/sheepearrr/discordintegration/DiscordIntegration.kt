@@ -136,7 +136,7 @@ class DiscordIntegration : ModInitializer {
                 for (message in MESSAGE_QUEUE) {
                     val sender = BOT?.rest?.guild?.getGuildMember(message.guildId.value!!, message.author.id)
                     server.playerManager.broadcast(
-                        Text.literal("${sender?.nick}: ${message.content}"),
+                        Text.literal("Á${sender?.nick}: ${message.content}"),
                         false
                     )
                 }
