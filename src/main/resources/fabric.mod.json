@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "discordintegration",
+  "version": "${version}",
+  "name": "DiscordIntegration",
+  "description": "",
+  "authors": [
+    "Sheepearrr"
+  ],
+  "contact": {
+    "discord": "sheepearrr"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/discordintegration/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "eu.sheepearrr.discordintegration.DiscordIntegration"
+    ]
+  },
+  "mixins": [
+    "discordintegration.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-language-kotlin": ">=${kotlin_loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
