@@ -60,6 +60,7 @@ object DiscordIntegration : ModInitializer {
             if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true)
                 return@on
             MESSAGE_QUEUE.add(message.data)
+            println("Message received on discord, ${message.data.content}")
         }
         GlobalScope.launch {
             BOT!!.login {

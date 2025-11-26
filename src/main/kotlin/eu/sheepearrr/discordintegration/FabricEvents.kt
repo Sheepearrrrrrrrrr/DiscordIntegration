@@ -9,11 +9,7 @@ import eu.sheepearrr.discordintegration.DiscordIntegration.CONFIG
 import eu.sheepearrr.discordintegration.DiscordIntegration.COROUTINE_SCOPE
 import eu.sheepearrr.discordintegration.DiscordIntegration.MESSAGE_QUEUE
 import eu.sheepearrr.discordintegration.DiscordIntegration.toSnowflake
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -22,7 +18,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
-fun initFabricEvents(){
+fun initFabricEvents() {
     ServerLifecycleEvents.SERVER_STOPPED.register {
         runBlocking {
             BOT?.let { bot ->
@@ -76,16 +72,19 @@ fun initFabricEvents(){
         }
     }
     ServerTickEvents.END_SERVER_TICK.register { server ->
-        COROUTINE_SCOPE.launch {
-            for (message in MESSAGE_QUEUE) {
+        val message = MESSAGE_QUEUE.firstOrNull()
+        if (message != null) {
+            MESSAGE_QUEUE.remove(message)
+            COROUTINE_SCOPE.launch {
                 val sender = BOT?.rest?.guild?.getGuildMember(message.guildId.value!!, message.author.id)
                 server.playerManager.broadcast(
                     Text.literal("Á${sender?.nick}: ${message.content}"),
                     false
                 )
             }
-            MESSAGE_QUEUE.clear()
-            if (server.ticks % 6000 == 0) {
+        }
+        if (server.ticks % 6000 == 0) {
+            COROUTINE_SCOPE.launch {
                 BOT?.rest?.channel?.patchChannel(
                     CONFIG.yapChannel.get().toSnowflake(),
                     ChannelModifyPatchRequest(topic = Optional("Currently Online: ${server.currentPlayerCount}/${server.maxPlayerCount}"))
