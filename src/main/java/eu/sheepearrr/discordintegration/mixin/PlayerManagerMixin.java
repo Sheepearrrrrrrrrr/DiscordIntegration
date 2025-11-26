@@ -22,7 +22,7 @@ public abstract class PlayerManagerMixin {
             at = @At("HEAD")
     )
     private void discordIntegration$sendToChannels(Text message, Function<ServerPlayerEntity, Text> playerMessageFactory, boolean overlay, CallbackInfo ci) {
-        if ((message instanceof TranslatableTextContent translatable && (translatable.getKey().startsWith("multiplayer.player.left") || translatable.getKey().startsWith("multiplayer.player.joined"))) || message.getString().startsWith("Á"))
+        if ((message instanceof TranslatableTextContent translatable && (translatable.getKey().startsWith("multiplayer.player.left") || translatable.getKey().startsWith("multiplayer.player.joined"))))
             return;
         DiscordIntegration.handleMessage(message.getString().substring(1));
     }
