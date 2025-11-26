@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.text.Text
+import net.minecraft.util.Colors
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -77,8 +78,12 @@ fun initFabricEvents() {
             MESSAGE_QUEUE.remove(message)
             COROUTINE_SCOPE.launch {
                 val sender = BOT?.rest?.guild?.getGuildMember(message.guildId.value!!, message.author.id)
+                val color = BOT?.rest?.guild?.getGuildRoles(message.guildId.value!!)?.first { it.id == sender?.roles[0] }?.color ?: Colors.WHITE
                 server.playerManager.broadcast(
-                    Text.literal("<${sender?.nick}>: ${message.content}"),
+                    Text.empty()
+                        .append(Text.literal("<"))
+                        .append(Text.literal(sender?.nick?.value ?: message.author.globalName.value).withColor(color))
+                        .append(Text.literal("> ${message.content}")),
                     false
                 )
             }

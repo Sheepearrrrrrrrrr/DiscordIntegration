@@ -57,7 +57,7 @@ object DiscordIntegration : ModInitializer {
         }
         BOT = Kord(CONFIG.token.get().trim())
         BOT!!.on<MessageCreateEvent> {
-            if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true)
+            if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true || MESSAGE_QUEUE.contains(message.data))
                 return@on
             MESSAGE_QUEUE.add(message.data)
             println("Message received on discord, ${message.data.content}")
