@@ -60,9 +60,9 @@ object DiscordIntegration : ModInitializer {
             if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true || MESSAGE_QUEUE.contains(message.data))
                 return@on
             MESSAGE_QUEUE.add(message.data)
-            println("Message received on discord, ${message.data.content}")
         }
         GlobalScope.launch {
+            LOGGER.info("Starting Discord bot.")
             BOT!!.login {
                 intents += Intent.GuildMessages
                 intents += Intent.DirectMessages

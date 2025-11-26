@@ -24,11 +24,11 @@ fun initFabricEvents() {
         runBlocking {
             BOT?.let { bot ->
                 bot.rest.channel.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
-                    content = ":reconsider: The server has stopped :reconsider:"
+                    content = "<:reconsider:1437046622788911194> The server has stopped <:reconsider:1437046622788911194>"
                 }
                 bot.rest.channel.patchChannel(
                     CONFIG.yapChannel.get().toSnowflake(),
-                    ChannelModifyPatchRequest(topic = Optional(":reconsider: Server Offline :reconsider:"))
+                    ChannelModifyPatchRequest(topic = Optional("<:reconsider:1437046622788911194> Server Offline <:reconsider:1437046622788911194>"))
                 )
                 bot.logout()
             }
@@ -38,7 +38,7 @@ fun initFabricEvents() {
         COROUTINE_SCOPE = CoroutineScope(SupervisorJob() + it.asCoroutineDispatcher())
         COROUTINE_SCOPE.launch {
             BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
-                content = ":fooftrue: The server has started :fooftrue:"
+                content = "<:fooftrue:1435036912778874930> The server has started <:fooftrue:1435036912778874930>"
             }
         }
     }
@@ -78,14 +78,15 @@ fun initFabricEvents() {
             MESSAGE_QUEUE.remove(message)
             COROUTINE_SCOPE.launch {
                 val sender = BOT?.rest?.guild?.getGuildMember(message.guildId.value!!, message.author.id)
-                val color = BOT?.rest?.guild?.getGuildRoles(message.guildId.value!!)?.first { it.id == sender?.roles[0] }?.color ?: Colors.WHITE
-                server.playerManager.broadcast(
-                    Text.empty()
-                        .append(Text.literal("<"))
-                        .append(Text.literal(sender?.nick?.value ?: message.author.globalName.value).withColor(color))
-                        .append(Text.literal("> ${message.content}")),
-                    false
-                )
+                val color = BOT?.rest?.guild?.getGuildRoles(message.guildId.value!!)?.first { it.id == sender?.roles?.last() }?.color ?: Colors.WHITE
+                val mcMessage = Text.empty()
+                    .append(Text.literal("<"))
+                    .append(Text.literal(sender?.nick?.value ?: message.author.globalName.value).withColor(color))
+                    .append(Text.literal("> ${message.content}"))
+                server.sendMessage(mcMessage)
+                for(player in server.playerManager.playerList) {
+                    player.sendMessageToClient(mcMessage, false)
+                }
             }
         }
         if (server.ticks % 6000 == 0) {
