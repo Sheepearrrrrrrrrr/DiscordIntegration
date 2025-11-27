@@ -1,6 +1,7 @@
 package eu.sheepearrr.discordintegration
 
 import dev.kord.common.Color
+import dev.kord.common.entity.DiscordRole
 import dev.kord.common.entity.optional.Optional
 import dev.kord.rest.builder.message.EmbedBuilder
 import dev.kord.rest.json.request.ChannelModifyPatchRequest
@@ -20,7 +21,7 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 fun initFabricEvents() {
-    ServerLifecycleEvents.SERVER_STOPPED.register {
+    ServerLifecycleEvents.SERVER_STOPPED.register { server ->
         runBlocking {
             BOT?.let { bot ->
                 bot.rest.channel.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
@@ -32,6 +33,7 @@ fun initFabricEvents() {
                 )
                 bot.logout()
             }
+
         }
     }
     ServerLifecycleEvents.SERVER_STARTED.register {
@@ -78,13 +80,23 @@ fun initFabricEvents() {
             MESSAGE_QUEUE.remove(message)
             COROUTINE_SCOPE.launch {
                 val sender = BOT?.rest?.guild?.getGuildMember(message.guildId.value!!, message.author.id)
-                val color = BOT?.rest?.guild?.getGuildRoles(message.guildId.value!!)?.first { it.id == sender?.roles?.last() }?.color ?: Colors.WHITE
+                var currentHighest: DiscordRole? = null
+                BOT?.rest?.guild?.getGuildRoles(message.guildId.value!!)?.let { roles ->
+                    for (role in roles.filter { role -> sender?.roles?.contains(role.id) == true }) {
+                        currentHighest?.position?.let {
+                            if (role.position < it)
+                            currentHighest = role
+                            continue
+                        }
+                        currentHighest = role
+                    }
+                }
                 val mcMessage = Text.empty()
                     .append(Text.literal("<"))
-                    .append(Text.literal(sender?.nick?.value ?: message.author.globalName.value).withColor(color))
+                    .append(Text.literal(sender?.nick?.value ?: message.author.globalName.value).withColor(currentHighest?.color ?: Colors.WHITE))
                     .append(Text.literal("> ${message.content}"))
                 server.sendMessage(mcMessage)
-                for(player in server.playerManager.playerList) {
+                for (player in server.playerManager.playerList) {
                     player.sendMessageToClient(mcMessage, false)
                 }
             }
