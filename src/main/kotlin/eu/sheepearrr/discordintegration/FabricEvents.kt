@@ -16,28 +16,34 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.minecraft.text.Text
 import net.minecraft.util.Colors
+import kotlin.system.exitProcess
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 fun initFabricEvents() {
     ServerLifecycleEvents.SERVER_STOPPED.register { server ->
-        runBlocking {
+        COROUTINE_SCOPE.launch {
             BOT?.let { bot ->
                 bot.rest.channel.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
                     content = "<:reconsider:1437046622788911194> The server has stopped <:reconsider:1437046622788911194>"
                 }
-                bot.rest.channel.patchChannel(
-                    CONFIG.yapChannel.get().toSnowflake(),
+                bot.rest.channel.patchChannel(CONFIG.yapChannel.get().toSnowflake(),
                     ChannelModifyPatchRequest(topic = Optional("<:reconsider:1437046622788911194> Server Offline <:reconsider:1437046622788911194>"))
                 )
-                bot.logout()
+                bot.shutdown()
             }
-
+        }
+        COROUTINE_SCOPE.launch {
+            delay(1000)
+            exitProcess(0)
         }
     }
     ServerLifecycleEvents.SERVER_STARTED.register {
         COROUTINE_SCOPE = CoroutineScope(SupervisorJob() + it.asCoroutineDispatcher())
+        runBlocking {
+            DiscordIntegration.mainBot()
+        }
         COROUTINE_SCOPE.launch {
             BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
                 content = "<:fooftrue:1435036912778874930> The server has started <:fooftrue:1435036912778874930>"
@@ -82,9 +88,9 @@ fun initFabricEvents() {
                 val sender = BOT?.rest?.guild?.getGuildMember(message.guildId.value!!, message.author.id)
                 var currentHighest: DiscordRole? = null
                 BOT?.rest?.guild?.getGuildRoles(message.guildId.value!!)?.let { roles ->
-                    for (role in roles.filter { role -> sender?.roles?.contains(role.id) == true }) {
+                    for (role in roles.filter { role -> sender?.roles?.contains(role.id) == true && role.color != 0 }) {
                         currentHighest?.position?.let {
-                            if (role.position < it)
+                            if (role.position > it)
                             currentHighest = role
                             continue
                         }

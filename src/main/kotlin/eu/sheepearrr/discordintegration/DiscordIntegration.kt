@@ -43,9 +43,6 @@ object DiscordIntegration : ModInitializer {
     }
 
     override fun onInitialize() {
-        runBlocking {
-            mainBot()
-        }
         initFabricEvents()
     }
 
@@ -60,8 +57,9 @@ object DiscordIntegration : ModInitializer {
             if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true || MESSAGE_QUEUE.contains(message.data))
                 return@on
             MESSAGE_QUEUE.add(message.data)
+            println(message.author)
         }
-        GlobalScope.launch {
+        COROUTINE_SCOPE.launch {
             LOGGER.info("Starting Discord bot.")
             BOT!!.login {
                 intents += Intent.GuildMessages
