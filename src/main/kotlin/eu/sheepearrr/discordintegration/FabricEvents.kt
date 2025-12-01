@@ -57,10 +57,9 @@ fun initFabricEvents() {
     }
     ServerPlayerEvents.JOIN.register {
         val embed = EmbedBuilder()
-        embed.title = "Joined the game"
         embed.color = Color(0x55FF55)
         embed.author {
-            name = it.name.string
+            name = it.name.string + " joined the game"
             icon = "https://api.mineatar.io/face/${it.uuid}"
         }
         embed.timestamp = Clock.System.now()
@@ -72,10 +71,9 @@ fun initFabricEvents() {
     }
     ServerPlayerEvents.LEAVE.register {
         val embed = EmbedBuilder()
-        embed.title = "Left the game"
         embed.color = Color(0xFF5555)
         embed.author {
-            name = it.name.string
+            name = it.name.string +  " left the game"
             icon = "https://api.mineatar.io/face/${it.uuid}"
         }
         embed.timestamp = Clock.System.now()

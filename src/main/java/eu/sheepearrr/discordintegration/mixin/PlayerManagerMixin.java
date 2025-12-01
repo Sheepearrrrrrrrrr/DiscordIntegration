@@ -33,6 +33,10 @@ public abstract class PlayerManagerMixin {
             at = @At("TAIL")
     )
     private void discordIntegration$sendChatMessageToChannels(SignedMessage message, Predicate<ServerPlayerEntity> shouldSendFiltered, ServerPlayerEntity sender, MessageType.Parameters params, CallbackInfo ci) {
-        DiscordIntegration.handleMessage(sender.getName().getString() + ": " + message.getContent().getString());
+        var author = "[**Server**]";
+        if (sender != null) {
+            author = "<**" + sender.getName().getString() + "**>";
+        }
+        DiscordIntegration.handleMessage(author + "  " + message.getContent().getString());
     }
 }

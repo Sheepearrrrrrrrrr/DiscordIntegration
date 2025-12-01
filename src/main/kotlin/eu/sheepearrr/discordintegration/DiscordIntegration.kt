@@ -9,10 +9,14 @@ import dev.kord.core.on
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.EmbedBuilder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
+import me.fzzyhmstrs.fzzy_config.nullCast
 import net.fabricmc.api.ModInitializer
 import net.minecraft.server.PlayerManager
+import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.Identifier
@@ -49,7 +53,7 @@ object DiscordIntegration : ModInitializer {
     }
 
     @JvmStatic
-    fun theGassyLighty(valueArg: String) : String {
+    fun theGassyLighty(valueArg: String): String {
         var value = valueArg
         if (CONFIG.squeakingAround.get()) {
             value = value.replace("peak", "squeak", ignoreCase = true)
@@ -74,7 +78,7 @@ object DiscordIntegration : ModInitializer {
     }
 
     @JvmStatic
-    fun handleCustomEmbeds(translatable: TranslatableTextContent, args: Array<Any>, text: Text) : Boolean {
+    fun handleCustomEmbeds(translatable: TranslatableTextContent, args: Array<Any>, mcText: Text): Boolean {
         translatable.key.let {
             if (it.startsWith("multiplayer.player") || it == "multiplayer.player.left")
                 return true
@@ -84,12 +88,11 @@ object DiscordIntegration : ModInitializer {
                 val player = PLAYER_MANAGER?.getPlayer((args[0] as Text).string)
                 player?.let { player ->
                     embed.author {
-                        name = player.name.string
+                        name = mcText.string //player.name.string
                         icon = "https://api.mineatar.io/face/${player.uuid}"
                     }
                 }
-                embed.color = Color(0xFFAA00)
-                embed.title = text.string
+                embed.color = Color(0x8C1D25)
                 COROUTINE_SCOPE.launch {
                     BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
                         embeds = mutableListOf(embed)
@@ -103,12 +106,23 @@ object DiscordIntegration : ModInitializer {
                     name = player?.name?.string
                     icon = "https://api.mineatar.io/face/${player?.uuid}"
                 }
-                embed.title = text.string
-                embed.color = Color(when (it.substring(22)) {
-                    "task", "goal" -> 0x55FF55
-                    "challenge" -> 0xAA00AA
-                    else -> 0xFFFFFF
-                })
+                embed.title = mcText.string
+                embed.color = Color(
+                    when (it.substring(22)) {
+                        "task", "goal" -> 0x55FF55
+                        "challenge" -> 0xAA00AA
+                        else -> 0xFFFFFF
+                    }
+                )
+
+                val textObj = args[1].nullCast<Text>()?.content?.nullCast<TranslatableTextContent>()?.args[0]
+                if (textObj is Text) {
+                    embed.footer {
+                        text = textObj.style?.hoverEvent
+                            ?.getValue(HoverEvent.Action.SHOW_TEXT)?.siblings?.get(1)?.string ?: "..."
+                    }
+                }
+
                 COROUTINE_SCOPE.launch {
                     BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
                         embeds = mutableListOf(embed)
@@ -132,8 +146,9 @@ object DiscordIntegration : ModInitializer {
         }
         BOT = Kord(CONFIG.token.get().trim())
         BOT!!.on<MessageCreateEvent> {
-            if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true || MESSAGE_QUEUE.contains(message.data))
-                return@on
+            if (message.channelId.value.toLong() != CONFIG.yapChannel.get()
+                || message.author?.isSelf == true || MESSAGE_QUEUE.contains(message.data)
+            ) return@on
             MESSAGE_QUEUE.add(message.data)
         }
         COROUTINE_SCOPE.launch {
