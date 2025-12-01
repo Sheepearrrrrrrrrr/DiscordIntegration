@@ -22,8 +22,9 @@ public abstract class PlayerManagerMixin {
             at = @At("HEAD")
     )
     private void discordIntegration$sendToChannels(Text message, Function<ServerPlayerEntity, Text> playerMessageFactory, boolean overlay, CallbackInfo ci) {
-        if (message.getContent() instanceof TranslatableTextContent translatable && (translatable.getKey().startsWith("multiplayer.player.left") || translatable.getKey().startsWith("multiplayer.player.joined")))
+        if (message.getContent() instanceof TranslatableTextContent translatable && DiscordIntegration.handleCustomEmbeds(translatable, translatable.getArgs(), message)) {
             return;
+        }
         DiscordIntegration.handleMessage(message.getString());
     }
 

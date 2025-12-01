@@ -2,6 +2,7 @@ package eu.sheepearrr.discordintegration
 
 import dev.kord.common.Color
 import dev.kord.common.entity.DiscordRole
+import dev.kord.common.entity.PresenceStatus
 import dev.kord.common.entity.optional.Optional
 import dev.kord.rest.builder.message.EmbedBuilder
 import dev.kord.rest.json.request.ChannelModifyPatchRequest
@@ -44,10 +45,14 @@ fun initFabricEvents() {
         runBlocking {
             DiscordIntegration.mainBot()
         }
+        DiscordIntegration.PLAYER_MANAGER = it.playerManager
         COROUTINE_SCOPE.launch {
             BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
                 content = "<:fooftrue:1435036912778874930> The server has started <:fooftrue:1435036912778874930>"
             }
+            BOT?.rest?.channel?.patchChannel(CONFIG.yapChannel.get().toSnowflake(),
+                ChannelModifyPatchRequest(topic = Optional("<:fooftrue:1435036912778874930> Server Online <:fooftrue:1435036912778874930>"))
+            )
         }
     }
     ServerPlayerEvents.JOIN.register {
@@ -97,22 +102,25 @@ fun initFabricEvents() {
                         currentHighest = role
                     }
                 }
-                val mcMessage = Text.empty()
+                var mcMessage = Text.empty()
                     .append(Text.literal("<"))
                     .append(Text.literal(sender?.nick?.value ?: message.author.globalName.value).withColor(currentHighest?.color ?: Colors.WHITE))
-                    .append(Text.literal("> ${message.content}"))
+                    .append(Text.literal("> ${DiscordIntegration.theGassyLighty(message.content)}"))
+                if (message.attachments.isNotEmpty()) {
+                    mcMessage = mcMessage.append(Text.literal("\n    <Posted an attachment>").withColor(0x55FFFF))
+                }
                 server.sendMessage(mcMessage)
                 for (player in server.playerManager.playerList) {
                     player.sendMessageToClient(mcMessage, false)
                 }
             }
         }
-        if (server.ticks % 6000 == 0) {
+        if (server.ticks % 600 == 0) {
             COROUTINE_SCOPE.launch {
-                BOT?.rest?.channel?.patchChannel(
-                    CONFIG.yapChannel.get().toSnowflake(),
-                    ChannelModifyPatchRequest(topic = Optional("Currently Online: ${server.currentPlayerCount}/${server.maxPlayerCount}"))
-                )
+                BOT?.editPresence {
+                    status = PresenceStatus.Online
+                    state = "Currently Online: ${server.currentPlayerCount}/${server.maxPlayerCount}"
+                }
             }
         }
     }

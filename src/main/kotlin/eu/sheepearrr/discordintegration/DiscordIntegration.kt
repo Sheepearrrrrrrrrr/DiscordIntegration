@@ -1,5 +1,6 @@
 package eu.sheepearrr.discordintegration
 
+import dev.kord.common.Color
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.cache.data.MessageData
@@ -7,9 +8,13 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
+import dev.kord.rest.builder.message.EmbedBuilder
 import kotlinx.coroutines.*
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import net.fabricmc.api.ModInitializer
+import net.minecraft.server.PlayerManager
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,6 +32,7 @@ object DiscordIntegration : ModInitializer {
     var BOT: Kord? = null
     var MESSAGE_QUEUE: MutableList<MessageData> = mutableListOf()
     lateinit var COROUTINE_SCOPE: CoroutineScope
+    var PLAYER_MANAGER: PlayerManager? = null
 
     @JvmStatic
     fun id(path: String): Identifier = Identifier.of(MOD_ID, path)
@@ -37,9 +43,81 @@ object DiscordIntegration : ModInitializer {
     fun handleMessage(message: String) {
         COROUTINE_SCOPE.launch {
             BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
-                content = message
+                content = theGassyLighty(message)
             }
         }
+    }
+
+    @JvmStatic
+    fun theGassyLighty(valueArg: String) : String {
+        var value = valueArg
+        if (CONFIG.squeakingAround.get()) {
+            value = value.replace("peak", "squeak", ignoreCase = true)
+        }
+        if (CONFIG.doTheEnderFunny.get()) {
+            val random = "öüóú\$űőéáí%"
+            value = value
+                .replace("yes", "n${random}o", ignoreCase = true)
+                .replace("false", "tr${random}ue", ignoreCase = true)
+                .replace("lie", "tr${random}uth", ignoreCase = true)
+                .replace("fake", "re${random}al", ignoreCase = true)
+                .replace("no", "y${random}es", ignoreCase = true)
+                .replace("true", "fa${random}lse")
+                .replace("truth", "l${random}ie", ignoreCase = true)
+                .replace("real", "fa${random}ke")
+                .replace(random, "")
+        }
+        if (CONFIG.foodTheFoof.get()) {
+            value = value.replace("foof", "food", ignoreCase = true)
+        }
+        return value
+    }
+
+    @JvmStatic
+    fun handleCustomEmbeds(translatable: TranslatableTextContent, args: Array<Any>, text: Text) : Boolean {
+        translatable.key.let {
+            if (it.startsWith("multiplayer.player") || it == "multiplayer.player.left")
+                return true
+            else if (it.startsWith("death.")) {
+                /* DO THE FUNNY DEATH EMBED */
+                val embed = EmbedBuilder()
+                val player = PLAYER_MANAGER?.getPlayer((args[0] as Text).string)
+                player?.let { player ->
+                    embed.author {
+                        name = player.name.string
+                        icon = "https://api.mineatar.io/face/${player.uuid}"
+                    }
+                }
+                embed.color = Color(0xFFAA00)
+                embed.title = text.string
+                COROUTINE_SCOPE.launch {
+                    BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
+                        embeds = mutableListOf(embed)
+                    }
+                }
+                return true
+            } else if (it.startsWith("chat.type.advancement.")) {
+                val player = PLAYER_MANAGER?.getPlayer((args[0] as Text).string)
+                val embed = EmbedBuilder()
+                embed.author {
+                    name = player?.name?.string
+                    icon = "https://api.mineatar.io/face/${player?.uuid}"
+                }
+                embed.title = text.string
+                embed.color = Color(when (it.substring(22)) {
+                    "task", "goal" -> 0x55FF55
+                    "challenge" -> 0xAA00AA
+                    else -> 0xFFFFFF
+                })
+                COROUTINE_SCOPE.launch {
+                    BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
+                        embeds = mutableListOf(embed)
+                    }
+                }
+                return true
+            }
+        }
+        return false
     }
 
     override fun onInitialize() {
@@ -57,7 +135,6 @@ object DiscordIntegration : ModInitializer {
             if (message.channelId.value.toLong() != CONFIG.yapChannel.get() || message.author?.isSelf == true || MESSAGE_QUEUE.contains(message.data))
                 return@on
             MESSAGE_QUEUE.add(message.data)
-            println(message.author)
         }
         COROUTINE_SCOPE.launch {
             LOGGER.info("Starting Discord bot.")
