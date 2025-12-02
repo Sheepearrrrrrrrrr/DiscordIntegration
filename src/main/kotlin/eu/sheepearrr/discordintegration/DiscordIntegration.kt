@@ -109,7 +109,8 @@ object DiscordIntegration : ModInitializer {
                 embed.title = mcText.string
                 embed.color = Color(
                     when (it.substring(22)) {
-                        "task", "goal" -> 0x55FF55
+                        "task" -> 0x55FF55
+                        "goal" -> 16755200
                         "challenge" -> 0xAA00AA
                         else -> 0xFFFFFF
                     }
