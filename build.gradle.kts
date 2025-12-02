@@ -99,7 +99,7 @@ tasks.shadowJar {
 
 tasks.remapJar {
     dependsOn(tasks.shadowJar)
-    input = tasks.shadowJar.get().archiveFile
+    inputFile = tasks.shadowJar.get().archiveFile
 }
 
 // configure the maven publication
