@@ -27,16 +27,18 @@ fun initFabricEvents() {
         COROUTINE_SCOPE.launch {
             BOT?.let { bot ->
                 bot.rest.channel.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
-                    content = "<:reconsider:1437046622788911194> The server has stopped <:reconsider:1437046622788911194>"
+                    content =
+                        "<:reconsider:1437046622788911194> The server has stopped <:reconsider:1437046622788911194>"
                 }
-                bot.rest.channel.patchChannel(CONFIG.yapChannel.get().toSnowflake(),
+                if (CONFIG.updateTopic) bot.rest.channel.patchChannel(
+                    CONFIG.yapChannel.get().toSnowflake(),
                     ChannelModifyPatchRequest(topic = Optional("<:reconsider:1437046622788911194> Server Offline <:reconsider:1437046622788911194>"))
                 )
                 bot.shutdown()
             }
         }
         COROUTINE_SCOPE.launch {
-            delay(1000)
+            delay(1500)
             exitProcess(0)
         }
     }
@@ -50,7 +52,8 @@ fun initFabricEvents() {
             BOT?.rest?.channel?.createMessage(CONFIG.yapChannel.get().toSnowflake()) {
                 content = "<:fooftrue:1435036912778874930> The server has started <:fooftrue:1435036912778874930>"
             }
-            BOT?.rest?.channel?.patchChannel(CONFIG.yapChannel.get().toSnowflake(),
+            if (CONFIG.updateTopic) BOT?.rest?.channel?.patchChannel(
+                CONFIG.yapChannel.get().toSnowflake(),
                 ChannelModifyPatchRequest(topic = Optional("<:fooftrue:1435036912778874930> Server Online <:fooftrue:1435036912778874930>"))
             )
         }
@@ -73,7 +76,7 @@ fun initFabricEvents() {
         val embed = EmbedBuilder()
         embed.color = Color(0xFF5555)
         embed.author {
-            name = it.name.string +  " left the game"
+            name = it.name.string + " left the game"
             icon = "https://api.mineatar.io/face/${it.uuid}"
         }
         embed.timestamp = Clock.System.now()
@@ -94,7 +97,7 @@ fun initFabricEvents() {
                     for (role in roles.filter { role -> sender?.roles?.contains(role.id) == true && role.color != 0 }) {
                         currentHighest?.position?.let {
                             if (role.position > it)
-                            currentHighest = role
+                                currentHighest = role
                             continue
                         }
                         currentHighest = role

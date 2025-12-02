@@ -17,4 +17,7 @@ class DiscordIntegrationConfig : Config(DiscordIntegration.id(DiscordIntegration
     var doTheEnderFunny = ValidatedBoolean(true)
     @Comment("HMMM . . . Yummy! Some roasted Foof.")
     var foodTheFoof = ValidatedBoolean(true)
+
+    @Comment("Updates the channels topic to reflect server status")
+    var updateTopic = true
 }
