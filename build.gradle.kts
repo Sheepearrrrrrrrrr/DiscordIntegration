@@ -5,6 +5,7 @@ plugins {
     kotlin("jvm") version "2.2.21"
     id("fabric-loom") version "1.13-SNAPSHOT"
     id("maven-publish")
+    id("com.gradleup.shadow") version "9.2.2"
 }
 
 version = project.property("mod_version") as String
@@ -43,7 +44,14 @@ dependencies {
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("kotlin_loader_version")}")
 
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
-    implementation("dev.kord:kord-core:${project.property("kordlib_kord")}")
+    implementation("dev.kord:kord-core:${project.property("kord_version")}")
+    shadow("dev.kord:kord-core:${project.property("kord_version")}") {
+        exclude(group = "org.slf4j")
+        exclude(group = "org.jetbrains")
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+    }
+
     modImplementation("me.fzzyhmstrs:fzzy_config:${project.property("fzzy_config_version")}")
 }
 
@@ -80,6 +88,18 @@ tasks.jar {
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName}" }
     }
+}
+
+tasks.shadowJar {
+    archiveBaseName = base.archivesName
+    configurations = project.configurations.shadow.map(::listOf)
+    exclude("LICENSE")
+    exclude("LICENSE.txt")
+}
+
+tasks.remapJar {
+    dependsOn(tasks.shadowJar)
+    input = tasks.shadowJar.get().archiveFile
 }
 
 // configure the maven publication
