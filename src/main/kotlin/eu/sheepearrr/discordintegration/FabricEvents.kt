@@ -62,7 +62,7 @@ fun initFabricEvents() {
         val embed = EmbedBuilder()
         embed.color = Color(0x55FF55)
         embed.author {
-            name = it.name.string + " joined the game"
+            name = (it.displayName?.string ?: it.name.string) + " joined the game"
             icon = "https://api.mineatar.io/face/${it.uuid}"
         }
         embed.timestamp = Clock.System.now()
@@ -76,7 +76,7 @@ fun initFabricEvents() {
         val embed = EmbedBuilder()
         embed.color = Color(0xFF5555)
         embed.author {
-            name = it.name.string + " left the game"
+            name = (it.displayName?.string ?: it.name.string) + " left the game"
             icon = "https://api.mineatar.io/face/${it.uuid}"
         }
         embed.timestamp = Clock.System.now()
